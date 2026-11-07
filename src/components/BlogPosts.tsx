@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Calendar, ArrowUpRight, RefreshCw, AlertCircle, ExternalLink, Globe } from 'lucide-react';
+import { Calendar, ArrowUpRight, RefreshCw, AlertCircle, Globe, CheckCircle } from 'lucide-react';
 
 interface WordPressPost {
   id: number;
@@ -11,42 +11,43 @@ interface WordPressPost {
   category_name?: string;
 }
 
-const SAMPLE_POSTS: WordPressPost[] = [
+// 3 artículos reales de https://laprueba28.wordpress.com precargados para visualización instantánea sin latencia
+const INITIAL_WORDPRESS_POSTS: WordPressPost[] = [
   {
-    id: 1,
-    date: '2026-10-15T10:00:00',
-    title: { rendered: 'Por qué el valor n50 no debe superar 0,60 h⁻¹ en proyectos Passivhaus' },
+    id: 19,
+    date: '2026-11-07T13:07:38',
+    title: { rendered: 'Predecir el gasto' },
     excerpt: {
       rendered:
-        'Análisis técnico de cómo las infiltraciones de aire frío disparan la demanda de calefacción y por qué la certificación oficial del Passive House Institute exige este límite estricto.',
+        'Añade la ciudad de Gijón a la lista. Cambia también el nombre de la empresa por N50 Blowerdoor Test y optimiza el presupuesto energético de tu vivienda.',
     },
-    link: '#',
-    featured_media_url: '/images/blowerdoor_fan_door.jpg',
-    category_name: 'Passivhaus',
+    link: 'https://laprueba28.wordpress.com/2026/11/07/predecir-el-gasto/',
+    featured_media_url: 'https://laprueba28.wordpress.com/wp-content/uploads/2026/11/comparar-2-presupuestos.jpg',
+    category_name: 'Eficiencia',
   },
   {
-    id: 2,
-    date: '2026-09-28T12:30:00',
-    title: { rendered: 'Caso práctico: Localización de infiltraciones en sellado de ventanas con humo trazador' },
+    id: 16,
+    date: '2026-11-07T13:05:53',
+    title: { rendered: 'Cómo ahorrar en energía' },
     excerpt: {
       rendered:
-        'Revisión en obra de un edificio plurifamiliar donde el uso conjunto de presurización a 50 Pa y lápices de humo detectó fugas invisibles en la cinta de sellado perimetral.',
+        'Elimina las corrientes de aire involuntarias y las infiltraciones parásitas para reducir la factura energética y optimizar la climatización en obra nueva y reformas.',
     },
-    link: '#',
-    featured_media_url: '/images/building_smoke_detection.jpg',
-    category_name: 'Casos Reales',
+    link: 'https://laprueba28.wordpress.com/2026/11/07/como-ahorrar-en-energia/',
+    featured_media_url: 'https://laprueba28.wordpress.com/wp-content/uploads/2026/11/3-infografia-no-elijas.jpg',
+    category_name: 'Ahorro',
   },
   {
-    id: 3,
-    date: '2026-08-10T09:15:00',
-    title: { rendered: 'La importancia crítica del ensayo Blowerdoor intermedio antes de cerrar el pladur' },
+    id: 7,
+    date: '2026-11-07T13:04:35',
+    title: { rendered: 'Medir frente a intuir' },
     excerpt: {
       rendered:
-        'Descubre cómo subsanar errores de sellado a coste casi cero durante la fase de estructura, evitando sobrecostes irreversibles tras colocar los acabados interiores.',
+        'El ensayo Blowerdoor permite cuantificar con exactitud matemática las infiltraciones reales de la envolvente en lugar de basarse en estimaciones teóricas.',
     },
-    link: '#',
-    featured_media_url: '/images/technician_thermal_test.jpg',
-    category_name: 'Guía Técnica',
+    link: 'https://laprueba28.wordpress.com/2026/11/07/medir-frente-a-intuir/',
+    featured_media_url: 'https://laprueba28.wordpress.com/wp-content/uploads/2026/11/blower_door_model3_web_optimizada.webp',
+    category_name: 'Técnica',
   },
 ];
 
@@ -54,11 +55,12 @@ const DEFAULT_WP_SITE = 'https://laprueba28.wordpress.com';
 
 export const BlogPosts: React.FC = () => {
   const [wpUrl, setWpUrl] = useState<string>(DEFAULT_WP_SITE);
-  const [posts, setPosts] = useState<WordPressPost[]>(SAMPLE_POSTS);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [posts, setPosts] = useState<WordPressPost[]>(INITIAL_WORDPRESS_POSTS);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [fetchError, setFetchError] = useState<string>('');
-  const [isUsingCustomUrl, setIsUsingCustomUrl] = useState<boolean>(true);
+  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
 
+  // Convierte cualquier URL de WordPress a su endpoint REST JSON válido
   const resolveWpEndpoint = (rawUrl: string): string => {
     let clean = rawUrl.trim().replace(/\/+$/, '');
     if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
@@ -77,10 +79,9 @@ export const BlogPosts: React.FC = () => {
 
   const fetchWordPressPosts = async (urlToFetch: string) => {
     if (!urlToFetch.trim()) {
-      setPosts(SAMPLE_POSTS);
-      setIsUsingCustomUrl(false);
+      setPosts(INITIAL_WORDPRESS_POSTS);
       setFetchError('');
-      setIsLoading(false);
+      setIsLiveConnected(false);
       return;
     }
 
@@ -89,35 +90,26 @@ export const BlogPosts: React.FC = () => {
 
     try {
       const targetApiUrl = resolveWpEndpoint(urlToFetch);
+
+      // Consulta directa a la API REST pública de WordPress (con soporte nativo para CORS)
+      const res = await fetch(targetApiUrl);
       
-      // Intentamos primero a través del proxy nativo de Cloudflare Pages (/api/posts),
-      // y si falla (por ejemplo en previsualización local) consultamos directamente a la API pública de WordPress
-      let res: Response | null = null;
-      try {
-        if (urlToFetch === DEFAULT_WP_SITE) {
-          const proxyRes = await fetch('/api/posts');
-          if (proxyRes.ok) {
-            res = proxyRes;
-          }
-        }
-      } catch {
-        // Fallback a API directa
-      }
-
-      if (!res) {
-        res = await fetch(targetApiUrl);
-      }
-
       if (!res.ok) {
-        throw new Error(`Respuesta de WordPress: ${res.status} ${res.statusText}`);
+        throw new Error(`WordPress respondió con código ${res.status}`);
+      }
+
+      // Verificamos que la respuesta sea realmente JSON para evitar errores por páginas HTML de error
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('La respuesta del servidor no es un JSON válido');
       }
 
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('No se encontraron artículos publicados en ese sitio de WordPress.');
+        throw new Error('No se encontraron artículos en este sitio de WordPress');
       }
 
-      // Mapeo estructurado de los artículos de WordPress
+      // Mapeamos los campos del API de WordPress
       const mappedPosts: WordPressPost[] = data.slice(0, 3).map((item: any) => {
         let mediaUrl = '';
         try {
@@ -145,19 +137,18 @@ export const BlogPosts: React.FC = () => {
       });
 
       setPosts(mappedPosts);
-      setIsUsingCustomUrl(true);
+      setIsLiveConnected(true);
+      setFetchError('');
     } catch (err: any) {
-      console.warn('[N50.es] Advertencia cargando posts de WordPress:', err.message);
-      setFetchError(
-        `No se pudieron sincronizar los artículos en vivo (${err.message}). Mostrando artículos técnicos de respaldo.`
-      );
-      // Mantenemos los artículos de respaldo si hay algún error puntual de red
-      setPosts(SAMPLE_POSTS);
+      console.warn('[N50.es] Error consultando WordPress API:', err.message);
+      // Mantenemos los artículos precargados si hay fallo de conexión puntual
+      setFetchError(`No se pudieron sincronizar los artículos en vivo: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Sincronización en segundo plano al montar el componente
   useEffect(() => {
     fetchWordPressPosts(DEFAULT_WP_SITE);
   }, []);
@@ -184,9 +175,9 @@ export const BlogPosts: React.FC = () => {
     if (!htmlStr) return '';
     try {
       const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
-      return doc.body.textContent || htmlStr.replace(/<[^>]*>?/gm, '').trim();
+      return (doc.body.textContent || '').replace(/\[&hellip;\]/g, '...').trim();
     } catch {
-      return htmlStr.replace(/<[^>]*>?/gm, '').trim();
+      return htmlStr.replace(/<[^>]*>?/gm, '').replace(/\[&hellip;\]/g, '...').trim();
     }
   };
 
@@ -196,15 +187,19 @@ export const BlogPosts: React.FC = () => {
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
           <div className="max-w-2xl space-y-3">
-            <div className="text-xs font-mono font-bold tracking-widest text-[#E30613] uppercase">
-              Actualidad técnica & WordPress REST API
+            <div className="inline-flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-[#E30613] uppercase">
+              <span>Blog Técnico & Actualidad</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-emerald-700 font-semibold normal-case font-sans text-[11px]">
+                Sincronizado con laprueba28.wordpress.com
+              </span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight text-balance">
-              Artículos técnicos, guías y casos de ensayo
+              Últimos artículos del blog
             </h2>
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-              Contenido especializado sobre hermeticidad, estándar Passivhaus y termografía conectado
-              directamente con tu gestor de contenidos <strong>WordPress</strong>.
+              Publicaciones técnicas sobre hermeticidad, ahorro energético y ensayos Blowerdoor sincronizadas
+              en tiempo real desde tu blog de WordPress.
             </p>
           </div>
 
@@ -213,10 +208,13 @@ export const BlogPosts: React.FC = () => {
             <div className="text-[11px] font-semibold text-slate-700 mb-2 flex items-center justify-between">
               <span className="flex items-center gap-1.5">
                 <Globe className="w-3.5 h-3.5 text-[#142E43]" />
-                <span>Conectar tu WordPress en vivo:</span>
+                <span>Origen WordPress:</span>
               </span>
-              {isUsingCustomUrl && (
-                <span className="text-[10px] font-mono text-emerald-600 font-bold">Conectado</span>
+              {isLiveConnected && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <CheckCircle className="w-3 h-3 text-emerald-600" />
+                  Conectado en vivo
+                </span>
               )}
             </div>
 
@@ -225,8 +223,8 @@ export const BlogPosts: React.FC = () => {
                 type="url"
                 value={wpUrl}
                 onChange={(e) => setWpUrl(e.target.value)}
-                placeholder="https://tu-wordpress.com"
-                className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#E30613] bg-slate-50"
+                placeholder="https://laprueba28.wordpress.com"
+                className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#E30613] bg-slate-50 font-mono text-slate-700"
               />
               <button
                 type="submit"
@@ -236,25 +234,21 @@ export const BlogPosts: React.FC = () => {
                 {isLoading ? (
                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <span>Conectar</span>
+                  <span>Actualizar</span>
                 )}
               </button>
             </form>
 
             <div className="flex items-center justify-between mt-2 text-[10px] text-slate-400">
-              <span>Usa la REST API nativa: <code>/wp-json/wp/v2/posts</code></span>
-              {isUsingCustomUrl && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setWpUrl('');
-                    fetchWordPressPosts('');
-                  }}
-                  className="text-[#E30613] hover:underline"
-                >
-                  Restablecer
-                </button>
-              )}
+              <a
+                href="https://laprueba28.wordpress.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#E30613] hover:underline flex items-center gap-1"
+              >
+                <span>Visitar blog completo en laprueba28.wordpress.com</span>
+                <ArrowUpRight className="w-3 h-3" />
+              </a>
             </div>
           </div>
         </div>
@@ -265,7 +259,7 @@ export const BlogPosts: React.FC = () => {
             <div className="space-y-1">
               <span className="font-bold">{fetchError}</span>
               <p className="text-[11px] text-amber-700">
-                <strong>Solución rápida:</strong> En WordPress, añade la cabecera CORS en <code>functions.php</code> o usa nuestra función de Cloudflare Pages (<code>/functions/api/posts.js</code>) que actúa como proxy y caché automático.
+                Se siguen mostrando los artículos más recientes almacenados en caché.
               </p>
             </div>
           </div>
@@ -276,11 +270,11 @@ export const BlogPosts: React.FC = () => {
           {posts.slice(0, 3).map((post) => (
             <article
               key={post.id}
-              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow flex flex-col justify-between group"
+              className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
             >
               <div>
                 {/* Featured Image */}
-                <div className="relative h-48 overflow-hidden bg-slate-100">
+                <div className="relative h-52 overflow-hidden bg-slate-100">
                   <img
                     src={post.featured_media_url || '/images/blower_door_model3_web_optimizada.webp'}
                     alt={cleanHtml(post.title.rendered)}
@@ -316,11 +310,11 @@ export const BlogPosts: React.FC = () => {
               <div className="p-6 pt-0 border-t border-slate-100 mt-2">
                 <a
                   href={post.link}
-                  target={post.link === '#' ? '_self' : '_blank'}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#142E43] group-hover:text-[#E30613] transition-colors pt-4"
                 >
-                  <span>Leer artículo completo</span>
+                  <span>Leer artículo en el blog</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </a>
               </div>
