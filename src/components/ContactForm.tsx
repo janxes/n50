@@ -75,25 +75,13 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
     };
 
     try {
-      // 1. Envío POST a la función de servidor de Cloudflare Pages en /functions/api/submit
-      let res = await fetch('/functions/api/submit', {
+      const response = await fetch('/api/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
       });
-
-      // Fallback si la ruta configurada en Cloudflare Pages es /api/submit
-      if (!res.ok && res.status === 404) {
-        res = await fetch('/api/submit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
-      }
 
       // Guardamos el resumen de los datos para la pantalla de éxito antes de limpiar
       setSubmittedSummary({ ...formData });
