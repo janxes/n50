@@ -3,9 +3,21 @@
 // Esto resuelve CORS automáticamente y asegura una carga instantánea (<30ms).
 
 export async function onRequestGet(context) {
-  // Configura aquí la URL de tu instalación de WordPress (o defínela en variables de Cloudflare: WP_API_URL)
-  const wpBaseUrl = context.env.WP_API_URL || 'https://blog.n50.es';
-  const targetUrl = `${wpBaseUrl.replace(/\/+$/, '')}/wp-json/wp/v2/posts?per_page=3&_embed=true`;
+  // Configura aquí la URL de WordPress (o defínela en variables de Cloudflare: WP_API_URL)
+  const wpBaseUrl = context.env.WP_API_URL || 'https://laprueba28.wordpress.com';
+  
+  // Soporte tanto para sitios alojados en WordPress.com como para instalaciones auto-alojadas (self-hosted)
+  let targetUrl = '';
+  try {
+    const parsedUrl = new URL(wpBaseUrl.startsWith('http') ? wpBaseUrl : `https://${wpBaseUrl}`);
+    if (parsedUrl.hostname.endsWith('wordpress.com')) {
+      targetUrl = `https://public-api.wordpress.com/wp/v2/sites/${parsedUrl.hostname}/posts?per_page=3&_embed=true`;
+    } else {
+      targetUrl = `${parsedUrl.origin}/wp-json/wp/v2/posts?per_page=3&_embed=true`;
+    }
+  } catch {
+    targetUrl = 'https://public-api.wordpress.com/wp/v2/sites/laprueba28.wordpress.com/posts?per_page=3&_embed=true';
+  }
 
   try {
     const cache = caches.default;
@@ -13,7 +25,7 @@ export async function onRequestGet(context) {
     let response = await cache.match(cacheKey);
 
     if (!response) {
-      // Si no está en caché de Cloudflare, consulta a WordPress
+      // Consulta a la REST API de WordPress
       const wpResponse = await fetch(targetUrl, {
         headers: {
           'User-Agent': 'CloudflarePages-N50-Bot/1.0',

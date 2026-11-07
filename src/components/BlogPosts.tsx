@@ -50,18 +50,37 @@ const SAMPLE_POSTS: WordPressPost[] = [
   },
 ];
 
+const DEFAULT_WP_SITE = 'https://laprueba28.wordpress.com';
+
 export const BlogPosts: React.FC = () => {
-  const [wpUrl, setWpUrl] = useState<string>('');
+  const [wpUrl, setWpUrl] = useState<string>(DEFAULT_WP_SITE);
   const [posts, setPosts] = useState<WordPressPost[]>(SAMPLE_POSTS);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [fetchError, setFetchError] = useState<string>('');
-  const [isUsingCustomUrl, setIsUsingCustomUrl] = useState<boolean>(false);
+  const [isUsingCustomUrl, setIsUsingCustomUrl] = useState<boolean>(true);
+
+  const resolveWpEndpoint = (rawUrl: string): string => {
+    let clean = rawUrl.trim().replace(/\/+$/, '');
+    if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
+      clean = `https://${clean}`;
+    }
+    try {
+      const parsed = new URL(clean);
+      if (parsed.hostname.endsWith('wordpress.com')) {
+        return `https://public-api.wordpress.com/wp/v2/sites/${parsed.hostname}/posts?per_page=3&_embed=true`;
+      }
+      return `${parsed.origin}/wp-json/wp/v2/posts?per_page=3&_embed=true`;
+    } catch {
+      return `https://public-api.wordpress.com/wp/v2/sites/laprueba28.wordpress.com/posts?per_page=3&_embed=true`;
+    }
+  };
 
   const fetchWordPressPosts = async (urlToFetch: string) => {
     if (!urlToFetch.trim()) {
       setPosts(SAMPLE_POSTS);
       setIsUsingCustomUrl(false);
       setFetchError('');
+      setIsLoading(false);
       return;
     }
 
@@ -69,24 +88,37 @@ export const BlogPosts: React.FC = () => {
     setFetchError('');
 
     try {
-      // Clean base URL and append WordPress REST API endpoint with embedded media
-      let cleanUrl = urlToFetch.trim().replace(/\/+$/, '');
-      if (!cleanUrl.includes('/wp-json/wp/v2/posts')) {
-        cleanUrl = `${cleanUrl}/wp-json/wp/v2/posts?per_page=3&_embed=true`;
+      const targetApiUrl = resolveWpEndpoint(urlToFetch);
+      
+      // Intentamos primero a través del proxy nativo de Cloudflare Pages (/api/posts),
+      // y si falla (por ejemplo en previsualización local) consultamos directamente a la API pública de WordPress
+      let res: Response | null = null;
+      try {
+        if (urlToFetch === DEFAULT_WP_SITE) {
+          const proxyRes = await fetch('/api/posts');
+          if (proxyRes.ok) {
+            res = proxyRes;
+          }
+        }
+      } catch {
+        // Fallback a API directa
       }
 
-      const res = await fetch(cleanUrl);
+      if (!res) {
+        res = await fetch(targetApiUrl);
+      }
+
       if (!res.ok) {
         throw new Error(`Respuesta de WordPress: ${res.status} ${res.statusText}`);
       }
 
       const data = await res.json();
       if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('No se encontraron artículos publicados en ese endpoint.');
+        throw new Error('No se encontraron artículos publicados en ese sitio de WordPress.');
       }
 
-      // Map WordPress API response
-      const mappedPosts: WordPressPost[] = data.map((item: any) => {
+      // Mapeo estructurado de los artículos de WordPress
+      const mappedPosts: WordPressPost[] = data.slice(0, 3).map((item: any) => {
         let mediaUrl = '';
         try {
           mediaUrl = item._embedded?.['wp:featuredmedia']?.[0]?.source_url || '';
@@ -96,9 +128,9 @@ export const BlogPosts: React.FC = () => {
 
         let category = 'Artículo';
         try {
-          category = item._embedded?.['wp:term']?.[0]?.[0]?.name || 'Ingeniería';
+          category = item._embedded?.['wp:term']?.[0]?.[0]?.name || 'Ensayo Blowerdoor';
         } catch {
-          category = 'Ingeniería';
+          category = 'Ensayo Blowerdoor';
         }
 
         return {
@@ -107,7 +139,7 @@ export const BlogPosts: React.FC = () => {
           title: item.title,
           excerpt: item.excerpt,
           link: item.link,
-          featured_media_url: mediaUrl || '/images/blowerdoor_fan_door.jpg',
+          featured_media_url: mediaUrl || '/images/blower_door_model3_web_optimizada.webp',
           category_name: category,
         };
       });
@@ -115,13 +147,20 @@ export const BlogPosts: React.FC = () => {
       setPosts(mappedPosts);
       setIsUsingCustomUrl(true);
     } catch (err: any) {
+      console.warn('[N50.es] Advertencia cargando posts de WordPress:', err.message);
       setFetchError(
-        `No se pudieron cargar los posts automáticamente (${err.message}). Verifica que el sitio tenga activa la REST API y soporte CORS o usa el proxy de Cloudflare Functions.`
+        `No se pudieron sincronizar los artículos en vivo (${err.message}). Mostrando artículos técnicos de respaldo.`
       );
+      // Mantenemos los artículos de respaldo si hay algún error puntual de red
+      setPosts(SAMPLE_POSTS);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchWordPressPosts(DEFAULT_WP_SITE);
+  }, []);
 
   const handleTestSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +181,13 @@ export const BlogPosts: React.FC = () => {
   };
 
   const cleanHtml = (htmlStr: string) => {
-    return htmlStr.replace(/<[^>]*>?/gm, '').trim();
+    if (!htmlStr) return '';
+    try {
+      const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
+      return doc.body.textContent || htmlStr.replace(/<[^>]*>?/gm, '').trim();
+    } catch {
+      return htmlStr.replace(/<[^>]*>?/gm, '').trim();
+    }
   };
 
   return (
@@ -237,7 +282,7 @@ export const BlogPosts: React.FC = () => {
                 {/* Featured Image */}
                 <div className="relative h-48 overflow-hidden bg-slate-100">
                   <img
-                    src={post.featured_media_url || '/images/blowerdoor_fan_door.jpg'}
+                    src={post.featured_media_url || '/images/blower_door_model3_web_optimizada.webp'}
                     alt={cleanHtml(post.title.rendered)}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     referrerPolicy="no-referrer"
