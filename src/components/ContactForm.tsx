@@ -83,7 +83,12 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
         body: JSON.stringify(payload),
       });
 
-      // Guardamos el resumen de los datos para la pantalla de éxito antes de limpiar
+      const responseData = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(responseData.error || 'Error al procesar el envío.');
+      }
+
       setSubmittedSummary({ ...formData });
 
       // Limpiamos los campos del formulario
@@ -103,22 +108,8 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
 
       setIsSubmitted(true);
     } catch (err: any) {
-      // En modo local o prueba sin conexión, limpiamos campos y mostramos confirmación
-      setSubmittedSummary({ ...formData });
-      setFormData({
-        nombre: '',
-        email: '',
-        telefono: '',
-        comunidad: 'Madrid y alrededores',
-        localidad: '',
-        tipoInmueble: 'Vivienda unifamiliar aislada',
-        superficieM2: '',
-        faseObra: 'Obra en curso (estructura y cerramiento)',
-        objetivo: 'Certificación Passivhaus / EnerPHit',
-        detalles: '',
-        ensayoRecomendado: '',
-      });
-      setIsSubmitted(true);
+      console.error("Error en el formulario:", err);
+      setErrorMessage(err.message || 'Hubo un problema de conexión al enviar tu solicitud.');
     } finally {
       setIsSubmitting(false);
     }
