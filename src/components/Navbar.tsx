@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Logo } from './Logo';
-import { Menu, X, ArrowUpRight, CloudDownload } from 'lucide-react';
+import { Menu, X, ArrowUpRight } from 'lucide-react';
 
 interface NavbarProps {
   onOpenCloudflareModal: () => void;
@@ -77,17 +77,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCloudflareModal, onScrollT
           </button>
         </nav>
 
-        {/* Zone 3: 1 primary action + Export button */}
+        {/* Zone 3: 1 primary action */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={onOpenCloudflareModal}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer border border-slate-200"
-            title="Ver y exportar código estático limpio para Cloudflare Pages"
-          >
-            <CloudDownload className="w-4 h-4 text-[#142E43]" />
-            <span>Código Cloudflare</span>
-          </button>
-
           <button
             onClick={() => handleNavClick('contacto')}
             className="inline-flex items-center gap-1 px-4 py-2 text-xs md:text-sm font-semibold text-white bg-[#E30613] hover:bg-[#c30510] active:scale-[0.98] transition-all rounded-lg shadow-sm whitespace-nowrap shrink-0 cursor-pointer"
@@ -156,16 +147,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCloudflareModal, onScrollT
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenCloudflareModal();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg border border-slate-200"
-            >
-              <CloudDownload className="w-4 h-4 text-[#142E43]" />
-              <span>Ver paquete estático para Cloudflare Pages</span>
-            </button>
             <button
               onClick={() => handleNavClick('contacto')}
               className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-white bg-[#E30613] rounded-lg"
