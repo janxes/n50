@@ -1,0 +1,8 @@
+{
+  "name": "N50.es Blowerdoor Test - Ensayos de Hermeticidad",
+  "description": "Ensayos Blowerdoor y diagnóstico de hermeticidad para viviendas, edificios y Passivhaus en Madrid, Castilla y León, Asturias, Cantabria y Euskadi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
