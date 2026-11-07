@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { WordPressPost } from '../types';
-import { ArrowLeft, Calendar, Clock, Share2, Check, ArrowRight, ShieldCheck, Bookmark, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Share2, Check, ArrowRight } from 'lucide-react';
 
 interface BlogPostDetailProps {
   post: WordPressPost;
@@ -165,30 +165,24 @@ export const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack, on
         {/* Article Header Card */}
         <header className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-10 shadow-xs mb-8 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex items-center gap-2">
-              <span className="bg-[#142E43] text-white font-mono text-[11px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">
-                {post.category_name || 'Ingeniería Passivhaus'}
-              </span>
-              <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                <span>SEO Canónico Oficial n50.es</span>
-              </span>
-            </div>
+            <span className="bg-[#142E43] text-white font-mono text-[11px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">
+              {post.category_name || 'Ingeniería Passivhaus'}
+            </span>
 
             <button
               onClick={handleCopyCanonical}
-              title="Copiar URL canónica oficial"
-              className="inline-flex items-center gap-1.5 text-xs font-mono px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors cursor-pointer"
+              title="Compartir enlace de este artículo"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors cursor-pointer"
             >
               {copiedCanonical ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  <span className="text-emerald-700 font-bold">¡Canónica copiada!</span>
+                  <span className="text-emerald-700 font-bold">¡Enlace copiado!</span>
                 </>
               ) : (
                 <>
                   <Share2 className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Copiar enlace canónico</span>
+                  <span>Compartir artículo</span>
                 </>
               )}
             </button>
@@ -206,10 +200,6 @@ export const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack, on
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-slate-400" />
               <span>Lectura estimada: ~{readingMinutes} min</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-slate-400 font-mono text-[11px]">
-              <Bookmark className="w-3.5 h-3.5" />
-              <span>Canónica: {canonicalUrl}</span>
             </div>
           </div>
         </header>
@@ -232,28 +222,6 @@ export const BlogPostDetail: React.FC<BlogPostDetailProps> = ({ post, onBack, on
             className="article-html-content"
             dangerouslySetInnerHTML={{ __html: post.content?.rendered || post.excerpt?.rendered || '' }}
           />
-
-          {/* WordPress Reference Footnote */}
-          <div className="mt-12 pt-6 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-slate-500 bg-slate-50 -mx-6 -mb-6 p-6 rounded-b-2xl">
-            <div>
-              <span className="font-semibold text-slate-700">Identificador canónico:</span>{' '}
-              <code className="text-[#E30613] font-mono">{canonicalUrl}</code>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Publicación sincronizada con el gestor de contenidos WordPress ({post.URL || 'laprueba28.wordpress.com'})
-              </p>
-            </div>
-            {post.URL && (
-              <a
-                href={post.URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[#142E43] hover:text-[#E30613] font-semibold transition-colors shrink-0"
-              >
-                <span>Ver entrada en WordPress original</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
-          </div>
         </div>
 
         {/* CTA Conversion Banner at End of Article */}

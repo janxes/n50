@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, ArrowRight, RefreshCw, AlertCircle, Globe, CheckCircle, ExternalLink, BookOpen } from 'lucide-react';
+import { Calendar, ArrowRight } from 'lucide-react';
 import { WordPressPost } from '../types';
 
 interface BlogPostsProps {
   onSelectPost?: (post: WordPressPost) => void;
 }
 
-// 3 artículos reales de https://laprueba28.wordpress.com precargados
+// 3 artículos reales de https://laprueba28.wordpress.com precargados para respuesta instantánea
 const INITIAL_WORDPRESS_POSTS: WordPressPost[] = [
   {
     id: 27,
@@ -87,115 +87,72 @@ const INITIAL_WORDPRESS_POSTS: WordPressPost[] = [
   },
 ];
 
-const DEFAULT_WP_SITE = 'https://laprueba28.wordpress.com';
+const WP_API_ENDPOINT = 'https://public-api.wordpress.com/wp/v2/sites/laprueba28.wordpress.com/posts?per_page=3&_embed=true';
 
 export const BlogPosts: React.FC<BlogPostsProps> = ({ onSelectPost }) => {
-  const [wpUrl, setWpUrl] = useState<string>(DEFAULT_WP_SITE);
   const [posts, setPosts] = useState<WordPressPost[]>(INITIAL_WORDPRESS_POSTS);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [fetchError, setFetchError] = useState<string>('');
-  const [isLiveConnected, setIsLiveConnected] = useState<boolean>(true);
 
-  // Convierte cualquier URL de WordPress a su endpoint REST JSON válido
-  const resolveWpEndpoint = (rawUrl: string): string => {
-    let clean = rawUrl.trim().replace(/\/+$/, '');
-    if (!clean.startsWith('http://') && !clean.startsWith('https://')) {
-      clean = `https://${clean}`;
-    }
-    try {
-      const parsed = new URL(clean);
-      if (parsed.hostname.endsWith('wordpress.com')) {
-        return `https://public-api.wordpress.com/wp/v2/sites/${parsed.hostname}/posts?per_page=3&_embed=true`;
-      }
-      return `${parsed.origin}/wp-json/wp/v2/posts?per_page=3&_embed=true`;
-    } catch {
-      return `https://public-api.wordpress.com/wp/v2/sites/laprueba28.wordpress.com/posts?per_page=3&_embed=true`;
-    }
-  };
-
-  const fetchWordPressPosts = async (urlToFetch: string) => {
-    if (!urlToFetch.trim()) {
-      setPosts(INITIAL_WORDPRESS_POSTS);
-      setFetchError('');
-      setIsLiveConnected(false);
-      return;
-    }
-
-    setIsLoading(true);
-    setFetchError('');
-
-    try {
-      const targetApiUrl = resolveWpEndpoint(urlToFetch);
-
-      // Consulta directa a la API REST de WordPress.com
-      const res = await fetch(targetApiUrl);
-      if (!res.ok) {
-        throw new Error(`WordPress respondió con código ${res.status}`);
-      }
-
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        throw new Error('La respuesta del servidor no es un JSON válido');
-      }
-
-      const data = await res.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('No se encontraron artículos en este sitio de WordPress');
-      }
-
-      // Mapeamos los campos del API incluyendo slug y content completo para lectura nativa en n50.es
-      const mappedPosts: WordPressPost[] = data.slice(0, 3).map((item: any) => {
-        let mediaUrl = '';
-        try {
-          mediaUrl = item._embedded?.['wp:featuredmedia']?.[0]?.source_url || '';
-        } catch {
-          mediaUrl = '';
-        }
-
-        let category = 'Artículo';
-        try {
-          category = item._embedded?.['wp:term']?.[0]?.[0]?.name || 'Ensayo Blowerdoor';
-        } catch {
-          category = 'Ensayo Blowerdoor';
-        }
-
-        const postUrl = item.URL || item.link || item.url || '';
-        const postSlug = item.slug || String(item.id);
-
-        return {
-          id: item.id,
-          slug: postSlug,
-          date: item.date,
-          title: item.title,
-          excerpt: item.excerpt, // Resumen para las tarjetas
-          content: item.content || { rendered: item.excerpt?.rendered || '' }, // Contenido íntegro para lectura nativa
-          URL: postUrl,
-          link: postUrl,
-          featured_media_url: mediaUrl || '/images/blower_door_model3_web_optimizada.webp',
-          category_name: category,
-        };
-      });
-
-      setPosts(mappedPosts);
-      setIsLiveConnected(true);
-      setFetchError('');
-    } catch (err: any) {
-      console.warn('[N50.es] Error consultando WordPress API:', err.message);
-      setFetchError(`No se pudieron sincronizar los artículos en vivo: ${err.message}`);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Sincronización en segundo plano al montar el componente
+  // Sincronización transparente en segundo plano con la API de WordPress
   useEffect(() => {
-    fetchWordPressPosts(DEFAULT_WP_SITE);
-  }, []);
+    let isMounted = true;
 
-  const handleTestSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchWordPressPosts(wpUrl);
-  };
+    const fetchPosts = async () => {
+      try {
+        const res = await fetch(WP_API_ENDPOINT);
+        if (!res.ok) return;
+
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) return;
+
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) return;
+
+        const mappedPosts: WordPressPost[] = data.slice(0, 3).map((item: any) => {
+          let mediaUrl = '';
+          try {
+            mediaUrl = item._embedded?.['wp:featuredmedia']?.[0]?.source_url || '';
+          } catch {
+            mediaUrl = '';
+          }
+
+          let category = 'Artículo';
+          try {
+            category = item._embedded?.['wp:term']?.[0]?.[0]?.name || 'Ensayo Blowerdoor';
+          } catch {
+            category = 'Ensayo Blowerdoor';
+          }
+
+          const postUrl = item.URL || item.link || item.url || '';
+          const postSlug = item.slug || String(item.id);
+
+          return {
+            id: item.id,
+            slug: postSlug,
+            date: item.date,
+            title: item.title,
+            excerpt: item.excerpt,
+            content: item.content || { rendered: item.excerpt?.rendered || '' },
+            URL: postUrl,
+            link: postUrl,
+            featured_media_url: mediaUrl || '/images/blower_door_model3_web_optimizada.webp',
+            category_name: category,
+          };
+        });
+
+        if (isMounted) {
+          setPosts(mappedPosts);
+        }
+      } catch {
+        // En caso de fallo de red puntual se mantienen los artículos precargados de forma silenciosa
+      }
+    };
+
+    fetchPosts();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const formatDate = (dateStr: string) => {
     try {
@@ -229,88 +186,21 @@ export const BlogPosts: React.FC<BlogPostsProps> = ({ onSelectPost }) => {
   return (
     <section id="blog" className="py-20 bg-slate-50 border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-          <div className="max-w-2xl space-y-3">
-            <div className="inline-flex items-center gap-2 text-xs font-mono font-bold tracking-widest text-[#E30613] uppercase">
-              <span>Blog Técnico & Actualidad</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-emerald-700 font-semibold normal-case font-sans text-[11px]">
-                Artículos completos en n50.es · SEO Unificado
-              </span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight text-balance">
-              Últimos artículos del blog
-            </h2>
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-              Publicaciones técnicas sobre hermeticidad, ahorro energético y ensayos Blowerdoor. Haz clic en
-              cualquier artículo para leer el <strong>contenido completo</strong> dentro de N50.es con canónica oficial.
-            </p>
+        {/* Cabecera limpia y profesional de la sección */}
+        <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+          <div className="text-xs font-mono font-bold tracking-widest text-[#E30613] uppercase">
+            Actualidad Técnica
           </div>
-
-          {/* WordPress Connector Toolbar */}
-          <div className="bg-white p-3.5 rounded-xl border border-slate-200 shadow-xs max-w-md w-full">
-            <div className="text-[11px] font-semibold text-slate-700 mb-2 flex items-center justify-between">
-              <span className="flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5 text-[#142E43]" />
-                <span>Origen WordPress sincronizado:</span>
-              </span>
-              {isLiveConnected && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full">
-                  <CheckCircle className="w-3 h-3 text-emerald-600" />
-                  Conectado en vivo
-                </span>
-              )}
-            </div>
-
-            <form onSubmit={handleTestSubmit} className="flex gap-2">
-              <input
-                type="url"
-                value={wpUrl}
-                onChange={(e) => setWpUrl(e.target.value)}
-                placeholder="https://laprueba28.wordpress.com"
-                className="flex-1 px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-[#E30613] bg-slate-50 font-mono text-slate-700"
-              />
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="px-3 py-1.5 text-xs font-bold text-white bg-[#142E43] hover:bg-slate-800 rounded-lg transition-colors shrink-0 flex items-center gap-1 cursor-pointer disabled:opacity-50"
-              >
-                {isLoading ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <span>Actualizar</span>
-                )}
-              </button>
-            </form>
-
-            <div className="flex items-center justify-between mt-2 text-[10px] text-slate-400">
-              <a
-                href="https://laprueba28.wordpress.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-[#E30613] hover:underline flex items-center gap-1"
-              >
-                <span>Ver blog en laprueba28.wordpress.com</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          </div>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight text-balance">
+            Artículos y Guías de Hermeticidad
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
+            Publicaciones especializadas sobre ensayos Blowerdoor, estándar Passivhaus, termografía infrarroja
+            y optimización de la envolvente térmica.
+          </p>
         </div>
 
-        {fetchError && (
-          <div className="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3 text-xs text-amber-800">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <span className="font-bold">{fetchError}</span>
-              <p className="text-[11px] text-amber-700">
-                Se siguen mostrando los artículos más recientes almacenados en caché.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* 3 Posts Grid */}
+        {/* Cuadrícula limpia de 3 artículos */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {posts.slice(0, 3).map((post) => (
             <article
@@ -319,7 +209,7 @@ export const BlogPosts: React.FC<BlogPostsProps> = ({ onSelectPost }) => {
               className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-xl hover:border-slate-300 transition-all flex flex-col justify-between group cursor-pointer"
             >
               <div>
-                {/* Imagen destacada: Al hacer clic abre el artículo completo dentro de la app */}
+                {/* Imagen destacada */}
                 <div className="relative h-52 overflow-hidden bg-slate-100">
                   <img
                     src={post.featured_media_url || '/images/blower_door_model3_web_optimizada.webp'}
@@ -333,13 +223,9 @@ export const BlogPosts: React.FC<BlogPostsProps> = ({ onSelectPost }) => {
                       {post.category_name}
                     </div>
                   )}
-                  <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-mono px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                    <BookOpen className="w-3 h-3 text-[#E30613]" />
-                    <span>Leer en n50.es</span>
-                  </div>
                 </div>
 
-                {/* Contenido de la tarjeta: Título y post.excerpt (resumen corto para la cuadrícula) */}
+                {/* Contenido de la tarjeta: Título y extracto */}
                 <div className="p-6 space-y-3">
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -356,8 +242,8 @@ export const BlogPosts: React.FC<BlogPostsProps> = ({ onSelectPost }) => {
                 </div>
               </div>
 
-              {/* Botón de acción: Abrir artículo completo en la app */}
-              <div className="p-6 pt-0 border-t border-slate-100 mt-2 flex items-center justify-between">
+              {/* Botón de acción integrado */}
+              <div className="p-6 pt-0 border-t border-slate-100 mt-2">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -369,19 +255,6 @@ export const BlogPosts: React.FC<BlogPostsProps> = ({ onSelectPost }) => {
                   <span>Leer artículo completo</span>
                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </button>
-
-                {post.URL && (
-                  <a
-                    href={post.URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    title="Ver entrada en WordPress original"
-                    className="pt-4 text-slate-400 hover:text-slate-700 transition-colors"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                )}
               </div>
             </article>
           ))}
