@@ -7,7 +7,7 @@ interface CloudflareModalProps {
 }
 
 export const CloudflareExportModal: React.FC<CloudflareModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'index_html' | 'styles_css' | 'main_js' | 'contact_js' | 'posts_js' | 'headers' | 'robots' | 'guide'>('index_html');
+  const [activeTab, setActiveTab] = useState<'index_html' | 'styles_css' | 'main_js' | 'submit_ts' | 'posts_js' | 'headers' | 'robots' | 'guide'>('index_html');
   const [copied, setCopied] = useState<boolean>(false);
 
   if (!isOpen) return null;
@@ -312,9 +312,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });`,
 
-    contact_js: `// /functions/api/contact.js - Cloudflare Pages Function (Worker)
+    submit_ts: `// /functions/api/submit.ts - Cloudflare Pages Function (Worker)
 // Se ejecuta directamente en el borde de Cloudflare sin necesidad de servidor
 // Utiliza Resend API para enviar correos directamente a hola@n50.es
+
+interface Env {
+  RESEND_API_KEY?: string;
+}
 
 export async function onRequestPost(context) {
   try {
@@ -504,7 +508,7 @@ El archivo \`functions/api/contact.js\` se encarga de procesar el formulario de 
             { id: 'index_html', label: 'index.html', icon: FileText },
             { id: 'styles_css', label: 'css/styles.css', icon: Code2 },
             { id: 'main_js', label: 'js/main.js', icon: Code2 },
-            { id: 'contact_js', label: 'functions/api/contact.js', icon: Terminal },
+            { id: 'submit_ts', label: 'functions/api/submit.ts', icon: Terminal },
             { id: 'posts_js', label: 'functions/api/posts.js (WordPress)', icon: Terminal },
             { id: 'headers', label: '_headers', icon: Shield },
             { id: 'robots', label: 'robots.txt & sitemap', icon: Globe },

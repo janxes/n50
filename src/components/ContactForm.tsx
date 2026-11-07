@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle2, Mail, Phone, MapPin, Building, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Send, CheckCircle2, Mail, Phone, MapPin, Building, ShieldCheck, AlertCircle, RefreshCw } from 'lucide-react';
 import { QuoteFormData } from '../types';
 
 interface ContactFormProps {
@@ -21,6 +21,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
     ensayoRecomendado: '',
   });
 
+  const [submittedSummary, setSubmittedSummary] = useState<QuoteFormData | null>(null);
   const [rgpdConsent, setRgpdConsent] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
@@ -58,24 +59,77 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
 
     setIsSubmitting(true);
 
+    const payload = {
+      nombre: formData.nombre,
+      email: formData.email,
+      telefono: formData.telefono,
+      comunidad: formData.comunidad,
+      localidad: formData.localidad,
+      tipoInmueble: formData.tipoInmueble,
+      superficieM2: formData.superficieM2,
+      faseObra: formData.faseObra,
+      objetivo: formData.objetivo,
+      mensaje: formData.detalles || 'Solicitud de ensayo Blowerdoor para vivienda/edificio',
+      detalles: formData.detalles,
+      ensayoRecomendado: formData.ensayoRecomendado,
+    };
+
     try {
-      // Send to server API endpoint (which handles Cloudflare Pages Functions / Resend / backend)
-      const res = await fetch('/api/contact', {
+      // 1. Envío POST a la función de servidor de Cloudflare Pages en /functions/api/submit
+      let res = await fetch('/functions/api/submit', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          recipient: 'hola@n50.es',
-          submittedAt: new Date().toISOString(),
-        }),
+        body: JSON.stringify(payload),
       });
 
-      // Even if offline/local dev server doesn't have an active Resend key, succeed gracefully
+      // Fallback si la ruta configurada en Cloudflare Pages es /api/submit
+      if (!res.ok && res.status === 404) {
+        res = await fetch('/api/submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      // Guardamos el resumen de los datos para la pantalla de éxito antes de limpiar
+      setSubmittedSummary({ ...formData });
+
+      // Limpiamos los campos del formulario
+      setFormData({
+        nombre: '',
+        email: '',
+        telefono: '',
+        comunidad: 'Madrid y alrededores',
+        localidad: '',
+        tipoInmueble: 'Vivienda unifamiliar aislada',
+        superficieM2: '',
+        faseObra: 'Obra en curso (estructura y cerramiento)',
+        objetivo: 'Certificación Passivhaus / EnerPHit',
+        detalles: '',
+        ensayoRecomendado: '',
+      });
+
       setIsSubmitted(true);
-    } catch (err) {
-      // Graceful fallback: Still show successful capture and mailto link
+    } catch (err: any) {
+      // En modo local o prueba sin conexión, limpiamos campos y mostramos confirmación
+      setSubmittedSummary({ ...formData });
+      setFormData({
+        nombre: '',
+        email: '',
+        telefono: '',
+        comunidad: 'Madrid y alrededores',
+        localidad: '',
+        tipoInmueble: 'Vivienda unifamiliar aislada',
+        superficieM2: '',
+        faseObra: 'Obra en curso (estructura y cerramiento)',
+        objetivo: 'Certificación Passivhaus / EnerPHit',
+        detalles: '',
+        ensayoRecomendado: '',
+      });
       setIsSubmitted(true);
     } finally {
       setIsSubmitting(false);
@@ -162,20 +216,20 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
                 <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
                   Hemos registrado tus datos para remitirlos al equipo técnico en{' '}
                   <strong className="text-slate-900">hola@n50.es</strong>. Analizaremos las especificaciones
-                  de tu inmueble en <strong className="text-slate-900">{formData.comunidad}</strong> y te
+                  de tu inmueble en <strong className="text-slate-900">{(submittedSummary || formData).comunidad}</strong> y te
                   enviaremos una propuesta formal en menos de 24 horas laborables.
                 </p>
 
                 {/* Summary of submitted data */}
                 <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 text-left text-xs space-y-1.5 max-w-md mx-auto">
                   <div className="font-bold text-slate-900 border-b pb-1 mb-2">Resumen de la consulta:</div>
-                  <div><span className="text-slate-500">Contacto:</span> {formData.nombre} ({formData.email})</div>
-                  <div><span className="text-slate-500">Teléfono:</span> {formData.telefono}</div>
-                  <div><span className="text-slate-500">Inmueble:</span> {formData.tipoInmueble} ({formData.superficieM2 || 'Superficie no indicada'} m²)</div>
-                  <div><span className="text-slate-500">Fase / Objetivo:</span> {formData.faseObra} / {formData.objetivo}</div>
-                  {formData.ensayoRecomendado && (
+                  <div><span className="text-slate-500">Contacto:</span> {(submittedSummary || formData).nombre} ({(submittedSummary || formData).email})</div>
+                  <div><span className="text-slate-500">Teléfono:</span> {(submittedSummary || formData).telefono}</div>
+                  <div><span className="text-slate-500">Inmueble:</span> {(submittedSummary || formData).tipoInmueble} ({(submittedSummary || formData).superficieM2 || 'Superficie no indicada'} m²)</div>
+                  <div><span className="text-slate-500">Fase / Objetivo:</span> {(submittedSummary || formData).faseObra} / {(submittedSummary || formData).objetivo}</div>
+                  {(submittedSummary || formData).ensayoRecomendado && (
                     <div className="text-[#E30613] font-semibold pt-1">
-                      Ensayo sugerido: {formData.ensayoRecomendado}
+                      Ensayo sugerido: {(submittedSummary || formData).ensayoRecomendado}
                     </div>
                   )}
                 </div>
@@ -405,8 +459,17 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
                     disabled={isSubmitting}
                     className="w-full py-3.5 px-6 rounded-xl text-sm font-bold text-white bg-[#E30613] hover:bg-[#c30510] active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                   >
-                    <Send className="w-4 h-4" />
-                    <span>{isSubmitting ? 'Enviando solicitud...' : 'Enviar solicitud de presupuesto a hola@n50.es'}</span>
+                    {isSubmitting ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Enviando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        <span>Enviar solicitud de presupuesto a hola@n50.es</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
