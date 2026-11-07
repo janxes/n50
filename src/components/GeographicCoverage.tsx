@@ -171,7 +171,7 @@ export const GeographicCoverage: React.FC = () => {
           {/* Regional Architecture Photo (5 cols) */}
           <div className="lg:col-span-5 relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-slate-900 flex flex-col justify-end">
             <img
-              src="/src/assets/images/passivhaus_architecture_1794009398351.jpg"
+              src="/images/passivhaus_architecture.jpg"
               alt="Arquitectura Passivhaus de alta eficiencia en el norte de España"
               className="absolute inset-0 w-full h-full object-cover opacity-90"
               referrerPolicy="no-referrer"

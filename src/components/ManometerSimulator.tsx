@@ -319,7 +319,7 @@ export const ManometerSimulator: React.FC<SimulatorProps> = ({ onGoToContact }) 
               {activeMode === 'normal' && (
                 <div className="relative w-full h-full">
                   <img
-                    src="/src/assets/images/blowerdoor_fan_door_1794009396727.jpg"
+                    src="/images/blowerdoor_fan_door.jpg"
                     alt="Visión normal del equipo en funcionamiento"
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
@@ -334,7 +334,7 @@ export const ManometerSimulator: React.FC<SimulatorProps> = ({ onGoToContact }) 
               {activeMode === 'termografia' && (
                 <div className="relative w-full h-full bg-gradient-to-br from-indigo-950 via-purple-900 to-amber-900 overflow-hidden">
                   <img
-                    src="/src/assets/images/technician_thermal_test_1794009397135.jpg"
+                    src="/images/technician_thermal_test.jpg"
                     alt="Simulación termográfica"
                     className="w-full h-full object-cover mix-blend-screen opacity-70"
                     referrerPolicy="no-referrer"
@@ -359,7 +359,7 @@ export const ManometerSimulator: React.FC<SimulatorProps> = ({ onGoToContact }) 
               {activeMode === 'humo' && (
                 <div className="relative w-full h-full bg-slate-950">
                   <img
-                    src="/src/assets/images/building_smoke_detection_1794009397884.jpg"
+                    src="/images/building_smoke_detection.jpg"
                     alt="Simulación con lápiz de humo trazador"
                     className="w-full h-full object-cover opacity-80"
                     referrerPolicy="no-referrer"

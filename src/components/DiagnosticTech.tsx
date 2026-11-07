@@ -70,7 +70,7 @@ export const DiagnosticTech: React.FC = () => {
           <div className="lg:col-span-5 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between shadow-xs">
             <div className="relative h-52 overflow-hidden bg-slate-900">
               <img
-                src="/src/assets/images/technician_thermal_test_1794009397135.jpg"
+                src="/images/technician_thermal_test.jpg"
                 alt="Inspección con cámara termográfica durante ensayo Blowerdoor"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
@@ -99,7 +99,7 @@ export const DiagnosticTech: React.FC = () => {
           <div className="lg:col-span-5 bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden flex flex-col justify-between shadow-xs">
             <div className="relative h-52 overflow-hidden bg-slate-900">
               <img
-                src="/src/assets/images/building_smoke_detection_1794009397884.jpg"
+                src="/images/building_smoke_detection.jpg"
                 alt="Detección de vías de infiltración con lápiz de humo trazador"
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"

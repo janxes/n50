@@ -98,7 +98,7 @@ export const Hero: React.FC<HeroProps> = ({ onStartCalculator, onGoToContact }) 
           <div className="lg:col-span-5">
             <div className="relative rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl bg-slate-800 group">
               <img
-                src="/src/assets/images/blowerdoor_fan_door_1794009396727.jpg"
+                src="/images/blowerdoor_fan_door.jpg"
                 alt="Montaje de equipo Minneapolis Blowerdoor en puerta exterior para ensayo de hermeticidad"
                 className="w-full h-[360px] sm:h-[420px] object-cover transition-transform duration-700 group-hover:scale-105"
                 referrerPolicy="no-referrer"

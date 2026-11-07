@@ -21,7 +21,7 @@ const SAMPLE_POSTS: WordPressPost[] = [
         'Análisis técnico de cómo las infiltraciones de aire frío disparan la demanda de calefacción y por qué la certificación oficial del Passive House Institute exige este límite estricto.',
     },
     link: '#',
-    featured_media_url: '/src/assets/images/blowerdoor_fan_door_1794009396727.jpg',
+    featured_media_url: '/images/blowerdoor_fan_door.jpg',
     category_name: 'Passivhaus',
   },
   {
@@ -33,7 +33,7 @@ const SAMPLE_POSTS: WordPressPost[] = [
         'Revisión en obra de un edificio plurifamiliar donde el uso conjunto de presurización a 50 Pa y lápices de humo detectó fugas invisibles en la cinta de sellado perimetral.',
     },
     link: '#',
-    featured_media_url: '/src/assets/images/building_smoke_detection_1794009397884.jpg',
+    featured_media_url: '/images/building_smoke_detection.jpg',
     category_name: 'Casos Reales',
   },
   {
@@ -45,7 +45,7 @@ const SAMPLE_POSTS: WordPressPost[] = [
         'Descubre cómo subsanar errores de sellado a coste casi cero durante la fase de estructura, evitando sobrecostes irreversibles tras colocar los acabados interiores.',
     },
     link: '#',
-    featured_media_url: '/src/assets/images/technician_thermal_test_1794009397135.jpg',
+    featured_media_url: '/images/technician_thermal_test.jpg',
     category_name: 'Guía Técnica',
   },
 ];
@@ -107,7 +107,7 @@ export const BlogPosts: React.FC = () => {
           title: item.title,
           excerpt: item.excerpt,
           link: item.link,
-          featured_media_url: mediaUrl || '/src/assets/images/blowerdoor_fan_door_1794009396727.jpg',
+          featured_media_url: mediaUrl || '/images/blowerdoor_fan_door.jpg',
           category_name: category,
         };
       });
@@ -237,7 +237,7 @@ export const BlogPosts: React.FC = () => {
                 {/* Featured Image */}
                 <div className="relative h-48 overflow-hidden bg-slate-100">
                   <img
-                    src={post.featured_media_url || '/src/assets/images/blowerdoor_fan_door_1794009396727.jpg'}
+                    src={post.featured_media_url || '/images/blowerdoor_fan_door.jpg'}
                     alt={cleanHtml(post.title.rendered)}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     referrerPolicy="no-referrer"

@@ -12,7 +12,7 @@ export const Logo: React.FC<LogoProps> = ({ className = 'h-11 sm:h-12', variant 
     return (
       <div className="inline-flex items-center bg-white px-3 py-1.5 rounded-xl shadow-xs border border-slate-700/60 select-none">
         <img
-          src="/assets/aistudio/N50_Logo_Mesa_de_trabajo_1_37eb0e96.png"
+          src="/logo-n50.png"
           alt="N50 Blower Door Test"
           className={`${className} w-auto object-contain shrink-0`}
           loading="eager"
@@ -24,7 +24,7 @@ export const Logo: React.FC<LogoProps> = ({ className = 'h-11 sm:h-12', variant 
   return (
     <div className="flex items-center select-none">
       <img
-        src="/assets/aistudio/N50_Logo_Mesa_de_trabajo_1_37eb0e96.png"
+        src="/logo-n50.png"
         alt="N50 Blower Door Test"
         className={`${className} w-auto object-contain shrink-0 drop-shadow-xs transition-transform duration-200 hover:scale-[1.02]`}
         loading="eager"
