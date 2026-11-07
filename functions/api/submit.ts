@@ -3,6 +3,8 @@
 
 interface Env {
   RESEND_API_KEY?: string;
+  RESEND_TO_EMAIL?: string;
+  RESEND_FROM_EMAIL?: string;
 }
 
 interface ContactPayload {
@@ -82,9 +84,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        // Utiliza el remitente verificado o onboarding@resend.dev para pruebas iniciales
-        from: 'N50 Blowerdoor <onboarding@resend.dev>',
-        to: ['hola@n50.es'],
+        from: 'N50.es Web <web@n50.es>',
+        to: [context.env.RESEND_TO_EMAIL || 'janxes@gmail.com'],
         reply_to: data.email,
         subject: `Nuevo Ensayo Blowerdoor: ${data.nombre} (${data.comunidad || 'Consulta Web'})`,
         html: `
@@ -125,7 +126,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       return new Response(
         JSON.stringify({
           success: true,
-          message: 'Solicitud enviada correctamente a hola@n50.es',
+          message: 'Solicitud enviada correctamente',
           id: resendData.id,
         }),
         { status: 200, headers: corsHeaders }
@@ -133,11 +134,23 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     } else {
       const errorText = await resendResponse.text();
       console.error('[N50.es] Error de Resend API:', errorText);
+
+      // Parseamos el mensaje exacto de Resend para mostrarlo con total transparencia
+      let detailedError = 'Error al enviar el correo a través de Resend.';
+      try {
+        const errorJson = JSON.parse(errorText);
+        if (errorJson.message) {
+          detailedError = errorJson.message;
+        }
+      } catch {
+        detailedError = errorText || detailedError;
+      }
+
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Error al enviar el correo a través de Resend.',
-          details: errorText,
+          error: detailedError,
+          raw: errorText,
         }),
         { status: resendResponse.status, headers: corsHeaders }
       );

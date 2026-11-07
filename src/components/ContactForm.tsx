@@ -86,7 +86,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialData }) => {
       const responseData = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(responseData.error || 'Error al procesar el envío.');
+        throw new Error(responseData.error || responseData.details || 'Error al procesar el envío a través de Resend.');
       }
 
       setSubmittedSummary({ ...formData });

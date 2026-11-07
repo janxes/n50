@@ -340,7 +340,7 @@ export async function onRequestPost(context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'N50 Web <notificaciones@n50.es>',
+        from: 'N50.es Web <web@n50.es>',
         to: ['hola@n50.es'],
         reply_to: data.email,
         subject: \`Nuevo Ensayo Blowerdoor: \${data.nombre} (\${data.comunidad || 'Madrid'})\`,
