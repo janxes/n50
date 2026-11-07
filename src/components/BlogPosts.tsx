@@ -5,13 +5,14 @@ interface WordPressPost {
   id: number;
   date: string;
   title: { rendered: string };
-  excerpt: { rendered: string };
-  link: string;
+  excerpt: { rendered: string }; // Únicamente el extracto para evitar contenido duplicado (SEO)
+  URL: string;                  // URL canónica del post original en WordPress
+  link?: string;                // Compatibilidad con WP REST API v2
   featured_media_url?: string;
   category_name?: string;
 }
 
-// 3 artículos reales de https://laprueba28.wordpress.com precargados para visualización instantánea sin latencia
+// 3 artículos reales de https://laprueba28.wordpress.com precargados (solo resumen extracto para SEO)
 const INITIAL_WORDPRESS_POSTS: WordPressPost[] = [
   {
     id: 19,
@@ -21,6 +22,7 @@ const INITIAL_WORDPRESS_POSTS: WordPressPost[] = [
       rendered:
         'Añade la ciudad de Gijón a la lista. Cambia también el nombre de la empresa por N50 Blowerdoor Test y optimiza el presupuesto energético de tu vivienda.',
     },
+    URL: 'https://laprueba28.wordpress.com/2026/11/07/predecir-el-gasto/',
     link: 'https://laprueba28.wordpress.com/2026/11/07/predecir-el-gasto/',
     featured_media_url: 'https://laprueba28.wordpress.com/wp-content/uploads/2026/11/comparar-2-presupuestos.jpg',
     category_name: 'Eficiencia',
@@ -33,6 +35,7 @@ const INITIAL_WORDPRESS_POSTS: WordPressPost[] = [
       rendered:
         'Elimina las corrientes de aire involuntarias y las infiltraciones parásitas para reducir la factura energética y optimizar la climatización en obra nueva y reformas.',
     },
+    URL: 'https://laprueba28.wordpress.com/2026/11/07/como-ahorrar-en-energia/',
     link: 'https://laprueba28.wordpress.com/2026/11/07/como-ahorrar-en-energia/',
     featured_media_url: 'https://laprueba28.wordpress.com/wp-content/uploads/2026/11/3-infografia-no-elijas.jpg',
     category_name: 'Ahorro',
@@ -45,6 +48,7 @@ const INITIAL_WORDPRESS_POSTS: WordPressPost[] = [
       rendered:
         'El ensayo Blowerdoor permite cuantificar con exactitud matemática las infiltraciones reales de la envolvente en lugar de basarse en estimaciones teóricas.',
     },
+    URL: 'https://laprueba28.wordpress.com/2026/11/07/medir-frente-a-intuir/',
     link: 'https://laprueba28.wordpress.com/2026/11/07/medir-frente-a-intuir/',
     featured_media_url: 'https://laprueba28.wordpress.com/wp-content/uploads/2026/11/blower_door_model3_web_optimizada.webp',
     category_name: 'Técnica',
@@ -125,12 +129,14 @@ export const BlogPosts: React.FC = () => {
           category = 'Ensayo Blowerdoor';
         }
 
+        const postUrl = item.URL || item.link || item.url || '';
         return {
           id: item.id,
           date: item.date,
           title: item.title,
-          excerpt: item.excerpt,
-          link: item.link,
+          excerpt: item.excerpt, // Se consume únicamente el extracto para evitar contenido duplicado en SEO
+          URL: postUrl,
+          link: postUrl,
           featured_media_url: mediaUrl || '/images/blower_door_model3_web_optimizada.webp',
           category_name: category,
         };
@@ -273,23 +279,32 @@ export const BlogPosts: React.FC = () => {
               className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between group"
             >
               <div>
-                {/* Featured Image */}
+                {/* Imagen destacada enlazada al artículo original */}
                 <div className="relative h-52 overflow-hidden bg-slate-100">
-                  <img
-                    src={post.featured_media_url || '/images/blower_door_model3_web_optimizada.webp'}
-                    alt={cleanHtml(post.title.rendered)}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    referrerPolicy="no-referrer"
-                    loading="lazy"
-                  />
+                  <a
+                    href={post.URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    tabIndex={-1}
+                    className="block w-full h-full"
+                    aria-label={`Ver artículo original: ${cleanHtml(post.title.rendered)}`}
+                  >
+                    <img
+                      src={post.featured_media_url || '/images/blower_door_model3_web_optimizada.webp'}
+                      alt={cleanHtml(post.title.rendered)}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                      loading="lazy"
+                    />
+                  </a>
                   {post.category_name && (
-                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#142E43] font-bold text-[10px] font-mono px-2.5 py-1 rounded-md uppercase tracking-wider shadow-xs">
+                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs text-[#142E43] font-bold text-[10px] font-mono px-2.5 py-1 rounded-md uppercase tracking-wider shadow-xs pointer-events-none">
                       {post.category_name}
                     </div>
                   )}
                 </div>
 
-                {/* Article Content */}
+                {/* Contenido del artículo: Únicamente post.excerpt para optimización SEO y evitar contenido duplicado */}
                 <div className="p-6 space-y-3">
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -297,24 +312,32 @@ export const BlogPosts: React.FC = () => {
                   </div>
 
                   <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#E30613] transition-colors leading-snug line-clamp-2">
-                    {cleanHtml(post.title.rendered)}
+                    <a
+                      href={post.URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline focus:outline-hidden"
+                    >
+                      {cleanHtml(post.title.rendered)}
+                    </a>
                   </h3>
 
+                  {/* Resumen corto únicamente vía post.excerpt (nunca post.content) */}
                   <p className="text-xs text-slate-600 leading-relaxed line-clamp-3">
                     {cleanHtml(post.excerpt.rendered)}
                   </p>
                 </div>
               </div>
 
-              {/* Read More Link */}
+              {/* Botón / Enlace canónico al artículo completo en WordPress original */}
               <div className="p-6 pt-0 border-t border-slate-100 mt-2">
                 <a
-                  href={post.link}
+                  href={post.URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#142E43] group-hover:text-[#E30613] transition-colors pt-4"
                 >
-                  <span>Leer artículo en el blog</span>
+                  <span>Leer artículo completo</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 </a>
               </div>
