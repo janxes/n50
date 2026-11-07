@@ -24,3 +24,16 @@ export interface RegionalZone {
   particularidadTecnica: string;
   disponibilidad: string;
 }
+
+export interface WordPressPost {
+  id: number;
+  slug: string;
+  date: string;
+  title: { rendered: string };
+  excerpt: { rendered: string };
+  content: { rendered: string };
+  URL: string;
+  link?: string;
+  featured_media_url?: string;
+  category_name?: string;
+}

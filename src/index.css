@@ -12,3 +12,97 @@
     font-feature-settings: "tnum" 1;
   }
 }
+
+/* Tipografía y maquetación para artículos completos de WordPress */
+.article-html-content {
+  color: #334155;
+  font-size: 1.0625rem;
+  line-height: 1.8;
+}
+
+.article-html-content p {
+  margin-bottom: 1.5rem;
+}
+
+.article-html-content h1,
+.article-html-content h2,
+.article-html-content h3,
+.article-html-content h4 {
+  color: #0f172a;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-top: 2.25rem;
+  margin-bottom: 1rem;
+}
+
+.article-html-content h2 {
+  font-size: 1.5rem;
+  border-bottom: 2px solid #f1f5f9;
+  padding-bottom: 0.5rem;
+}
+
+.article-html-content h3 {
+  font-size: 1.25rem;
+}
+
+.article-html-content ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.article-html-content ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.article-html-content li {
+  margin-bottom: 0.5rem;
+}
+
+.article-html-content blockquote {
+  border-left: 4px solid #E30613;
+  background-color: #f8fafc;
+  padding: 1rem 1.25rem;
+  font-style: italic;
+  color: #1e293b;
+  margin: 1.75rem 0;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+.article-html-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.75rem;
+  margin: 2rem auto;
+  display: block;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.article-html-content a {
+  color: #E30613;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article-html-content a:hover {
+  color: #b90510;
+}
+
+.article-html-content strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.article-html-content figure {
+  margin: 2rem 0;
+}
+
+.article-html-content figcaption {
+  text-align: center;
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-top: 0.5rem;
+}
