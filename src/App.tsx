@@ -7,6 +7,7 @@ import { ServicesGrid } from './components/ServicesGrid';
 import { BlowerdoorCalculator } from './components/BlowerdoorCalculator';
 import { GeographicCoverage } from './components/GeographicCoverage';
 import { AeoKnowledgeBase } from './components/AeoKnowledgeBase';
+import { BlogPosts } from './components/BlogPosts';
 import { ContactForm } from './components/ContactForm';
 import { Footer } from './components/Footer';
 import { CloudflareExportModal } from './components/CloudflareExportModal';
@@ -78,6 +79,9 @@ export default function App() {
 
         {/* AEO / GEO Knowledge Base and Structured Technical FAQ */}
         <AeoKnowledgeBase />
+
+        {/* Technical Blog & WordPress REST API Integration */}
+        <BlogPosts />
 
         {/* Validated Quote Request Form to hola@n50.es */}
         <ContactForm initialData={formDataState} />

@@ -159,6 +159,14 @@ export const Footer: React.FC<FooterProps> = ({ onScrollToSection, onOpenCloudfl
               </li>
               <li>
                 <button
+                  onClick={() => onScrollToSection('blog')}
+                  className="hover:text-white transition-colors cursor-pointer text-left"
+                >
+                  Artículos & Casos de Ensayo
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={onOpenCloudflareModal}
                   className="text-amber-400 hover:text-amber-300 font-semibold cursor-pointer text-left"
                 >

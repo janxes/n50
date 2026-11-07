@@ -7,7 +7,7 @@ interface CloudflareModalProps {
 }
 
 export const CloudflareExportModal: React.FC<CloudflareModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<'index_html' | 'styles_css' | 'main_js' | 'contact_js' | 'headers' | 'robots' | 'guide'>('index_html');
+  const [activeTab, setActiveTab] = useState<'index_html' | 'styles_css' | 'main_js' | 'contact_js' | 'posts_js' | 'headers' | 'robots' | 'guide'>('index_html');
   const [copied, setCopied] = useState<boolean>(false);
 
   if (!isOpen) return null;
@@ -322,7 +322,6 @@ export async function onRequestPost(context) {
     const apiKey = context.env.RESEND_API_KEY;
 
     if (!apiKey) {
-      // Fallback: log local y respuesta OK si aún no se ha configurado la clave secreta
       console.log('Nueva solicitud de presupuesto recibida para hola@n50.es:', data);
       return new Response(JSON.stringify({ success: true, message: 'Solicitud registrada' }), {
         status: 200,
@@ -330,7 +329,6 @@ export async function onRequestPost(context) {
       });
     }
 
-    // Envío vía Resend
     const resendResponse = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -363,6 +361,49 @@ export async function onRequestPost(context) {
       const err = await resendResponse.text();
       return new Response(JSON.stringify({ error: err }), { status: 500 });
     }
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  }
+}`,
+
+    posts_js: `// /functions/api/posts.js - Cloudflare Pages Function (Worker)
+// Conecta tu blog de WordPress con N50.es con caché en el CDN de Cloudflare
+// Resuelve CORS y carga los artículos en menos de 30ms
+
+export async function onRequestGet(context) {
+  // Configura la URL de tu WordPress en Variables de Cloudflare como WP_API_URL o edita aquí:
+  const wpBaseUrl = context.env.WP_API_URL || 'https://blog.n50.es';
+  const targetUrl = \`\${wpBaseUrl.replace(/\\/+$/, '')}/wp-json/wp/v2/posts?per_page=3&_embed=true\`;
+
+  try {
+    const cache = caches.default;
+    const cacheKey = new Request(context.request.url, context.request);
+    let response = await cache.match(cacheKey);
+
+    if (!response) {
+      const wpResponse = await fetch(targetUrl, {
+        headers: { 'Accept': 'application/json' },
+      });
+
+      if (!wpResponse.ok) {
+        return new Response(JSON.stringify({ error: 'Error al consultar WordPress' }), { status: wpResponse.status });
+      }
+
+      const posts = await wpResponse.json();
+
+      response = new Response(JSON.stringify(posts), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
+
+      context.waitUntil(cache.put(cacheKey, response.clone()));
+    }
+
+    return response;
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
@@ -464,6 +505,7 @@ El archivo \`functions/api/contact.js\` se encarga de procesar el formulario de 
             { id: 'styles_css', label: 'css/styles.css', icon: Code2 },
             { id: 'main_js', label: 'js/main.js', icon: Code2 },
             { id: 'contact_js', label: 'functions/api/contact.js', icon: Terminal },
+            { id: 'posts_js', label: 'functions/api/posts.js (WordPress)', icon: Terminal },
             { id: 'headers', label: '_headers', icon: Shield },
             { id: 'robots', label: 'robots.txt & sitemap', icon: Globe },
             { id: 'guide', label: 'Guía de Despliegue', icon: ExternalLink },

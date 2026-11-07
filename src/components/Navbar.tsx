@@ -67,7 +67,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCloudflareModal, onScrollT
             onClick={() => handleNavClick('aeo-faq')}
             className="hover:text-[#E30613] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
-            FAQ & Normativa
+            FAQ
+          </button>
+          <button
+            onClick={() => handleNavClick('blog')}
+            className="hover:text-[#E30613] transition-colors whitespace-nowrap shrink-0 cursor-pointer text-slate-900 font-semibold"
+          >
+            Artículos
           </button>
         </nav>
 
@@ -140,6 +146,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenCloudflareModal, onScrollT
               className="text-left py-2 px-3 rounded-md hover:bg-slate-100 transition-colors"
             >
               Preguntas Frecuentes & AEO
+            </button>
+            <button
+              onClick={() => handleNavClick('blog')}
+              className="text-left py-2 px-3 rounded-md hover:bg-slate-100 transition-colors font-semibold text-[#142E43]"
+            >
+              Artículos & Casos de Ensayo (WordPress)
             </button>
           </div>
 
