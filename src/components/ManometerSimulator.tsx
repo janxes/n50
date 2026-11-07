@@ -319,8 +319,8 @@ export const ManometerSimulator: React.FC<SimulatorProps> = ({ onGoToContact }) 
               {activeMode === 'normal' && (
                 <div className="relative w-full h-full">
                   <img
-                    src="/images/blowerdoor_fan_door.jpg"
-                    alt="Visión normal del equipo en funcionamiento"
+                    src="/images/blower_door_model3_web_optimizada.webp"
+                    alt="Minneapolis BlowerDoor Modelo 3 en funcionamiento"
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
